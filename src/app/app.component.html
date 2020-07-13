@@ -1,0 +1,263 @@
+<div class="container" [ngClass]="isRoundTrip && returnResult ? 'two-way' : 'one-way'">
+  <header>
+    <h2>Flight Search App</h2>
+  </header>
+  <section>
+    <form [formGroup]="searchForm" (ngSubmit)="searchFlight()">
+      <div class="journeyType">
+        <button type="button" (click)="selectJourneyType('oneWay')" class="btn" [ngClass]="{'active': !isRoundTrip}">One
+          Way</button>
+        <button type="button" (click)="selectJourneyType('roundTrip')" class="btn"
+          [ngClass]="{'active': isRoundTrip}">Return</button>
+      </div>
+      <div class="userInputs">
+        <input list="cities" formControlName="origin" placeholder="Enter Origin City">
+        <div class="hasError"
+          *ngIf="searchForm.get('origin').invalid && (searchForm.get('origin').touched || showErrorsIfAny)">
+          Please provide origin city
+        </div>
+        <input list="cities" formControlName="destination" placeholder="Enter Destination City">
+        <div class="hasError"
+          *ngIf="searchForm.get('destination').invalid && (searchForm.get('destination').touched || showErrorsIfAny)">
+          Please provide destination city
+        </div>
+        <datalist id="cities">
+          <option value="Pune (PNQ)">
+          <option value="Mumbai (BOM)">
+          <option value="Delhi (DEL)">
+          <option value="Bengaluru (BLR)">
+        </datalist>
+        <input class='journey-date' type="date" formControlName="departureDate" placeholder="Enter Departure Date">
+        <div class="hasError"
+          *ngIf="searchForm.get('departureDate').invalid && (searchForm.get('departureDate').touched || showErrorsIfAny)">
+          Please provide departure date
+        </div>
+        <input *ngIf="isRoundTrip" class='return-date' type="date" formControlName="returnDate"
+          placeholder="Enter Return Date">
+        <div class="hasError"
+          *ngIf="isRoundTrip && searchForm.get('returnDate').invalid && (searchForm.get('returnDate').touched || showErrorsIfAny)">
+          Please provide return date
+        </div>
+        <select class="custom-select" formControlName="noOfTravellers">
+          <option value="" disabled>Select passengers</option>
+          <option *ngFor="let passenger of passengers" [ngValue]="passenger">{{passenger}}</option>
+        </select>
+        <div class="hasError"
+          *ngIf="searchForm.get('noOfTravellers').invalid && (searchForm.get('noOfTravellers').touched || showErrorsIfAny)">
+          Please select number of travellers
+        </div>
+        <button id="submit" type="submit" class="btn active">
+          Search
+        </button>
+      </div>
+      <div class="refine-search" *ngIf="onwardResult">
+        <h3>Refine Flight Search</h3>
+        <div class="range">
+          <span>0</span>
+          <span>{{searchForm.get('maxPrice').value}}</span>
+        </div>
+        <!-- <input type="range" min="0" max="100000" value="100000" step="5000" formControlName="maxPrice" (input)="filterFlight()" (change)="filterFlight()"/> -->
+        <input type="range" min="0" max="50000" value="50000" formControlName="maxPrice" />
+
+      </div>
+    </form>
+  </section>
+  <ng-container>
+    <div class="onward-result" *ngIf="onwardResult">
+      <img src="../assets/flight.jpg" alt="onward">
+      <div>
+        <h3>{{origin}} to {{destination}}</h3>
+        <p>{{totalOnwardFlights}} flights found &nbsp;&nbsp;{{departureDate | date: 'EEEE, d MMMM'}}</p>
+      </div>
+    </div>
+    <div class="return-result" *ngIf="isRoundTrip && returnResult">
+      <img src="../assets/flight.jpg" alt="return">
+      <div>
+        <h3>{{destination}} to {{origin}}</h3>
+        <p>{{totalReturnFlights}} flights found &nbsp;&nbsp;{{returnDate | date: 'EEEE, d MMMM'}}</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container>
+    <div class="onward-flights" *ngIf="onwardResult">
+      <ng-container *ngFor="let directFlight of onwardDirectFlights; trackBy:trackByFlightNo">
+        <div class="onward-direct-flight wrap-flex" [ngClass]="{'wrap-flex-two-way': isRoundTrip && returnResult}"
+          *ngIf="filterDirectFlight(directFlight)">
+          <img class="img-display" [ngClass]="{'img-display-two-way': isRoundTrip && returnResult}"
+            src="../assets/card.jpg" alt="direct">
+          <div>
+            <h3>{{directFlight.flight.name}}</h3>
+            <p>{{directFlight.flight.flightNo}}</p>
+          </div>
+          <div>
+            <h3>{{directFlight.flight.departureTime}}</h3>
+            <p>{{directFlight.flight.originCity}}</p>
+          </div>
+          <div>
+            <h3>{{directFlight.flight.arrivalTime}}</h3>
+            <p>{{directFlight.flight.destinationCity}}</p>
+          </div>
+          <div>
+            <h3>{{directFlight.totalDuration}}</h3>
+            <p>Non stop</p>
+          </div>
+          <div>
+            <h3 class="book">
+              {{directFlight.flight.price * searchForm.get('noOfTravellers').value | currency: 'INR': true: '1.0-0'}}
+            </h3>
+          </div>
+          <button class="btn">Book</button>
+        </div>
+      </ng-container>
+      <div *ngFor="let multipleFlight of onwardMultipleFlights; let i = index; trackBy:trackByMultipleFlightNo">
+        <ng-container *ngIf="filterMultipleFlight(multipleFlight)">
+          <div class="onward-multiple-flight wrap-flex" [ngClass]="{'wrap-flex-two-way': isRoundTrip && returnResult}">
+            <img class="img-display" [ngClass]="{'img-display-two-way': isRoundTrip && returnResult}"
+              src="../assets/multiple.jpg" alt="Connected">
+            <div>
+              <h3>Multiple</h3>
+              <p>
+                <a href="javascript:void(0)" (click)="toggleOnwardDetails(i)">
+                  <span *ngIf="!showDetails[i]">Show Details</span>
+                  <span *ngIf="showDetails[i]">Hide Details</span>
+                </a>
+              </p>
+            </div>
+            <div>
+              <h3>{{multipleFlight.flights[0].departureTime}}</h3>
+              <p>{{multipleFlight.flights[0].originCity}}</p>
+            </div>
+            <div>
+              <h3>{{multipleFlight.flights[1].arrivalTime}}</h3>
+              <p>{{multipleFlight.flights[1].destinationCity}}</p>
+            </div>
+            <div>
+              <h3 style="color: rgb(58, 117, 58);">{{multipleFlight.totalDuration}}</h3>
+              <p>Total Duration</p>
+            </div>
+            <div>
+              <h3 class="book">
+                {{(multipleFlight.flights[0].price + multipleFlight.flights[1].price) * searchForm.get('noOfTravellers').value | currency: 'INR': true: '1.0-0'}}
+              </h3>
+            </div>
+            <button class="btn">Book</button>
+          </div>
+          <ng-container *ngIf="showDetails[i]">
+            <div class="onward-connected-flight wrap-flex"
+              [ngClass]="{'wrap-flex-two-way': isRoundTrip && returnResult}"
+              *ngFor="let connectedFlight of multipleFlight.flights; let index = index; trackBy:trackByConnectedFlightNo"
+              [class.dotted-border]="index == 0">
+              <img class="img-display" [ngClass]="{'img-display-two-way': isRoundTrip && returnResult}"
+                src="../assets/card.jpg" alt="direct">
+              <div>
+                <h3>{{connectedFlight.name}}</h3>
+                <p>{{connectedFlight.flightNo}}</p>
+              </div>
+              <div>
+                <h3>{{connectedFlight.departureTime}}</h3>
+                <p>{{connectedFlight.originCity}}</p>
+              </div>
+              <div>
+                <h3>{{connectedFlight.arrivalTime}}</h3>
+                <p>{{connectedFlight.destinationCity}}</p>
+              </div>
+              <div>
+                <h3>{{connectedFlight.duration}}</h3>
+                <p>&nbsp;</p>
+              </div>
+            </div>
+            <span class="layover-span">Layover Time {{multipleFlight.layover}}</span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+    <div class="return-flights" *ngIf="isRoundTrip && returnResult">
+      <ng-container *ngFor="let returnFlight of returnDirectFlights; trackBy:trackByFlightNo">
+        <div class="return-direct-flight wrap-flex-two-way wrap-flex" *ngIf="filterDirectFlight(returnFlight)">
+          <img class="img-display img-display-two-way" src="../assets/card.jpg" alt="direct">
+          <div>
+            <h3>{{returnFlight.flight.name}}</h3>
+            <p>{{returnFlight.flight.flightNo}}</p>
+          </div>
+          <div>
+            <h3>{{returnFlight.flight.departureTime}}</h3>
+            <p>{{returnFlight.flight.originCity}}</p>
+          </div>
+          <div>
+            <h3>{{returnFlight.flight.arrivalTime}}</h3>
+            <p>{{returnFlight.flight.destinationCity}}</p>
+          </div>
+          <div>
+            <h3>{{returnFlight.totalDuration}}</h3>
+            <p>Non stop</p>
+          </div>
+          <div>
+            <h3 class="book">
+              {{returnFlight.flight.price * searchForm.get('noOfTravellers').value | currency: 'INR': true: '1.0-0'}}
+            </h3>
+          </div>
+          <button class="btn">Book</button>
+        </div>
+      </ng-container>
+      <div *ngFor="let multipleFlight of returnMultipleFlights; let i = index; trackBy:trackByMultipleFlightNo">
+        <ng-container *ngIf="filterMultipleFlight(multipleFlight)">
+          <div class="return-multiple-flight wrap-flex-two-way wrap-flex">
+            <img class="img-display img-display-two-way" src="../assets/multiple.jpg" alt="connected">
+            <div>
+              <h3>Multiple</h3>
+              <p>
+                <a href="javascript:void(0)" (click)="toggleReturnDetails(i)">
+                  <span *ngIf="!showReturnDetails[i]">Show Details</span>
+                  <span *ngIf="showReturnDetails[i]">Hide Details</span>
+                </a>
+              </p>
+            </div>
+            <div>
+              <h3>{{multipleFlight.flights[0].departureTime}}</h3>
+              <p>{{multipleFlight.flights[0].originCity}}</p>
+            </div>
+            <div>
+              <h3>{{multipleFlight.flights[1].arrivalTime}}</h3>
+              <p>{{multipleFlight.flights[1].destinationCity}}</p>
+            </div>
+            <div>
+              <h3 style="color: rgb(58, 117, 58);">{{multipleFlight.totalDuration}}</h3>
+              <p>Total Duration</p>
+            </div>
+            <div>
+              <h3 class="book">
+                {{(multipleFlight.flights[0].price + multipleFlight.flights[1].price) * searchForm.get('noOfTravellers').value | currency: 'INR': true: '1.0-0'}}
+              </h3>
+            </div>
+            <button class="btn">Book</button>
+          </div>
+          <ng-container *ngIf="showReturnDetails[i]">
+            <div class="return-connected-flight wrap-flex-two-way wrap-flex"
+              *ngFor="let connectedFlight of multipleFlight.flights; let index = index; trackBy:trackByConnectedFlightNo"
+              [class.dotted-border]="index == 0">
+              <img class="img-display img-display-two-way" src="../assets/card.jpg" alt="direct">
+              <div>
+                <h3>{{connectedFlight.name}}</h3>
+                <p>{{connectedFlight.flightNo}}</p>
+              </div>
+              <div>
+                <h3>{{connectedFlight.departureTime}}</h3>
+                <p>{{connectedFlight.originCity}}</p>
+              </div>
+              <div>
+                <h3>{{connectedFlight.arrivalTime}}</h3>
+                <p>{{connectedFlight.destinationCity}}</p>
+              </div>
+              <div>
+                <h3>{{connectedFlight.duration}}</h3>
+                <p>&nbsp;</p>
+              </div>
+            </div>
+            <span class="layover-span">Layover Time {{multipleFlight.layover}}</span>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </ng-container>
+</div>
