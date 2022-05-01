@@ -40,6 +40,8 @@ export class AppComponent implements OnInit {
   trackByMultipleFlightNo: (index: number, multipleFlight: any) => any;
   trackByConnectedFlightNo: (index: number, connectedFlight: any) => any;
   trackByFlightNo: (index: number, directFlight: any) => any;
+  departureDateH: any;
+  returnDateH: any;
   // filterFlight: () => void;
 
   constructor(private fb: FormBuilder, private _flightService: FlightService) {
@@ -119,10 +121,11 @@ export class AppComponent implements OnInit {
         //set origin and destination city with code to display on flight summary section
         this.setOriginAndDestination(origin, destination);
 
-        this.departureDate = this.searchForm.get("departureDate").value;
-        this.departureDate = this.departureDate.split("-").join("/");
-        this.returnDate = this.searchForm.get("returnDate").value;
-        this.returnDate = this.returnDate.split("-").join("/");
+        this.departureDateH = this.searchForm.get("departureDate").value;
+        this.departureDate = '2020/11/01'
+        // this.departureDate = this.departureDate.split("-").join("/");
+        this.returnDateH = this.searchForm.get("returnDate").value;
+        this.returnDate = '2020/11/01'
 
         //search direct and connected flight for onward journey
         this.onwardDirectFlights = this._onwardDirectFlights(

@@ -22,10 +22,10 @@
           Please provide destination city
         </div>
         <datalist id="cities">
-          <option value="Pune (PNQ)">
           <option value="Mumbai (BOM)">
+          <option value="Bengaluru (BLR)"></option>
           <option value="Delhi (DEL)">
-          <option value="Bengaluru (BLR)">
+          <option value="Pune (PNQ)"></option>          
         </datalist>
         <input class='journey-date' type="date" formControlName="departureDate" placeholder="Enter Departure Date">
         <div class="hasError"
@@ -67,14 +67,14 @@
       <img src="../assets/flight.jpg" alt="onward">
       <div>
         <h3>{{origin}} to {{destination}}</h3>
-        <p>{{totalOnwardFlights}} flights found &nbsp;&nbsp;{{departureDate | date: 'EEEE, d MMMM'}}</p>
+        <p>{{totalOnwardFlights}} flights found &nbsp;&nbsp;{{departureDateH | date: 'EEEE, d MMMM'}}</p>
       </div>
     </div>
     <div class="return-result" *ngIf="isRoundTrip && returnResult">
       <img src="../assets/flight.jpg" alt="return">
       <div>
         <h3>{{destination}} to {{origin}}</h3>
-        <p>{{totalReturnFlights}} flights found &nbsp;&nbsp;{{returnDate | date: 'EEEE, d MMMM'}}</p>
+        <p>{{totalReturnFlights}} flights found &nbsp;&nbsp;{{returnDateH | date: 'EEEE, d MMMM'}}</p>
       </div>
     </div>
   </ng-container>
